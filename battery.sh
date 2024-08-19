@@ -61,9 +61,10 @@ Usage:
 
   battery maintain PERCENTAGE[1-100,stop]
     reboot-persistent battery level maintenance: turn off charging above, and on below a certain value
-	it has the option of a --force-discharge flag that discharges even when plugged in (this does NOT work well with clamshell mode)
+		it has the option of a --force-discharge flag that discharges even when plugged in (this does NOT work well with clamshell mode). Define two percentage values for sailing mode (wihout discharge).
     eg: battery maintain 80
     eg: battery maintain stop
+		eg: battery maintain 20 80
 
   battery maintain VOLTAGE[${voltage_min}V-${voltage_max}V,stop] (HYSTERESIS[${voltage_hyst_min}V-${voltage_hyst_max}V])
     reboot-persistent battery level maintenance: keep battery at a certain voltage
@@ -552,7 +553,11 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 	# Start charging
 	battery_percentage=$(get_battery_percentage)
 
-	log "Charging to and maintaining at $setting% from $battery_percentage%"
+	if ! valid_percentage "$subsetting"; then
+		log "Charging to and maintaining at $setting% from $battery_percentage%"
+	else
+		log "Sailing between $setting% - $subsetting%"
+	fi
 
 	# Loop until battery percent is exceeded
 	while true; do
@@ -561,20 +566,39 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 		is_charging=$(get_smc_charging_status)
 		ac_attached=$(get_charger_state)
 
-		if [[ "$battery_percentage" -ge "$setting" && ("$is_charging" == "enabled" || "$ac_attached" == "1") ]]; then
+		if valid_percentage "$setting" && valid_percentage "$subsetting"; then
 
-			log "Charge above $setting"
-			if [[ "$is_charging" == "enabled" ]]; then
-				disable_charging
+			if [[ "$battery_percentage" -ge "$setting" && ("$is_charging" == "enabled" || "$ac_attached" == "1") ]]; then
+
+				if [[ "$is_charging" == "enabled" ]]; then
+					disable_charging
+				fi
+				change_magsafe_led_color "green"
+
+			elif [[ "$battery_percentage" -lt "$subsetting" && "$is_charging" == "disabled" ]]; then
+
+				enable_charging
+				change_magsafe_led_color "orange"
+
 			fi
-			change_magsafe_led_color "green"
 
-		elif [[ "$battery_percentage" -lt "$setting" && "$is_charging" == "disabled" ]]; then
+		else
 
-			log "Charge below $setting"
-			enable_charging
-			change_magsafe_led_color "orange"
+			if [[ "$battery_percentage" -ge "$setting" && ("$is_charging" == "enabled" || "$ac_attached" == "1") ]]; then
 
+				log "Charge above $setting"
+				if [[ "$is_charging" == "enabled" ]]; then
+					disable_charging
+				fi
+				change_magsafe_led_color "green"
+
+			elif [[ "$battery_percentage" -lt "$setting" && "$is_charging" == "disabled" ]]; then
+
+				log "Charge below $setting"
+				enable_charging
+				change_magsafe_led_color "orange"
+
+			fi
 		fi
 
 		sleep 60
