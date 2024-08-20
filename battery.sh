@@ -745,9 +745,15 @@ if [[ "$action" == "maintain" ]]; then
 			log "Maintaining battery at ${setting}V ±${subsetting}V"
 
 		else
-			log "Writing new setting $setting to $maintain_percentage_tracker_file"
-			echo $setting >$maintain_percentage_tracker_file
-			log "Maintaining battery at $setting%"
+			if valid_percentage "$subsetting"; then
+				log "Writing new setting $setting% - $subsetting% to $maintain_percentage_tracker_file"
+				echo "$setting $subsetting" > $maintain_percentage_tracker_file
+				log "Maintaining battery at $setting% - $subsetting%"
+			else
+				log "Writing new setting $setting to $maintain_percentage_tracker_file"
+				echo $setting >$maintain_percentage_tracker_file
+				log "Maintaining battery at $setting%"
+			fi
 		fi
 
 	fi
@@ -824,7 +830,16 @@ if [[ "$action" == "status" ]]; then
 	if test -f $pidfile; then
 		maintain_percentage=$(cat $maintain_percentage_tracker_file 2>/dev/null)
 		if [[ $maintain_percentage ]]; then
-			maintain_level="$maintain_percentage%"
+			if [[ $maintain_percentage = *" "* ]]; then
+				temp=""
+				for percentage in $maintain_percentage
+				do
+					temp="${temp}${percentage}% - "
+				done
+				maintain_level=${temp:0:$((${#temp} - 3))}
+			else
+				maintain_level="$maintain_percentage%"
+			fi
 		else
 			maintain_level=$(cat $maintain_voltage_tracker_file 2>/dev/null)
 			maintain_level=$(echo "$maintain_level" | awk '{print $1 "V ±" $2 "V"}')
