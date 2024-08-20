@@ -1,5 +1,7 @@
 # Battery charge limiter for Apple Silicon Macbook devices
 
+This fork version added support to the concept of sailing mode from AlDente. Only command line is supported for such feature.
+
 <img width="300px" align="right" src="./screenshots/tray.png"/>This tool makes it possible to keep a chronically plugged in Apple Silicon Macbook at `80%` battery, since that will prolong the longevity of the battery. It is free and open-source and will remain that way.
 
 > Want to know if this tool does anything or is just a placebo? Read [this excellent article](https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries). TL;DR: keep your battery cool, keep it at 80% when plugged in, and discharge it as shallowly as feasible.
@@ -24,6 +26,7 @@ The first time you open the app, it will ask for your administator password so i
 - Keeps the limit engaged even after rebooting
 - Keeps the limit engaged even after closing the tray app
 - Also automatically installs the `battery` command line tool. If you want a custom charging percentage, the CLI is the only way to do that.
+- Keeps the battery in a specific range.
 
 Do you have questions, comments, or feature requests? [Open an issue here](https://github.com/actuallymentor/battery/issues) or [Tweet at me](https://twitter.com/actuallymentor).
 
@@ -79,9 +82,10 @@ Usage:
     output battery SMC status, % and time remaining
 
   battery maintain LEVEL[1-100,stop]
-    reboot-persistent battery level maintenance: turn off charging above, and on below a certain value
+    reboot-persistent battery level maintenance: turn off charging above, and on below a certain value. Could maintain between two percentages value similar to sailing mode in AlDente.
     eg: battery maintain 80
     eg: battery maintain stop
+    eg: battery maintain 70 80
 
   battery charging SETTING[on/off]
     manually set the battery to (not) charge
