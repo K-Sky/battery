@@ -546,6 +546,11 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 		log "Triggering discharge to $setting before enabling charging limiter"
 		$battery_binary discharge "$setting"
 		log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
+	elif valid_percentage "$subsetting"; then
+		# Before we start maintaining the battery level, first discharge to the target level
+		log "Triggering discharge to $subsetting before enabling sailing mode"
+		$battery_binary discharge "$subsetting"
+		log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
 	else
 		log "Not triggering discharge as it is not requested"
 	fi
