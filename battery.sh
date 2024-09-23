@@ -547,10 +547,16 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 		$battery_binary discharge "$setting"
 		log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
 	elif valid_percentage "$subsetting"; then
-		# Before we start maintaining the battery level, first discharge to the target level
-		log "Triggering discharge to $subsetting before enabling sailing mode"
-		$battery_binary discharge "$subsetting"
-		log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
+		# Before we start maintaining the battery level, first discharge to the target level if higher than the max level and charge to the max level if less than max level
+		if [[ "$battery_percentage" -gt "$subsetting" ]]; then	
+			log "Triggering discharge to $subsetting before enabling sailing mode"
+			$battery_binary discharge "$subsetting"
+			log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
+		else
+			log "Triggering charge to $subsetting before enabling sailing mode"
+			$battery_binary charge "$subsetting"
+			log "Charge pre battery-maintenance complete, continuing to battery maintenance loop"
+		fi
 	else
 		log "Not triggering discharge as it is not requested"
 	fi
@@ -573,7 +579,7 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 
 		if valid_percentage "$setting" && valid_percentage "$subsetting"; then
 
-			if [[ "$battery_percentage" -ge "$setting" && ("$is_charging" == "enabled" || "$ac_attached" == "1") ]]; then
+			if [[ "$battery_percentage" -ge "$setting" ]]; then
 
 				if [[ "$is_charging" == "enabled" ]]; then
 					disable_charging
