@@ -549,13 +549,13 @@ if [[ "$action" == "maintain_synchronous" ]]; then
 	elif valid_percentage "$subsetting"; then
 		# Before we start maintaining the battery level, first discharge to the target level if higher than the max level and charge to the max level if less than max level
 		if [[ "$battery_percentage" -gt "$subsetting" ]]; then	
-			log "Triggering discharge to $subsetting before enabling sailing mode"
-			$battery_binary discharge "$subsetting"
-			log "Discharge pre battery-maintenance complete, continuing to battery maintenance loop"
+			log "Triggering disable charging to $subsetting before enabling sailing mode"
+			disable_charging
+			change_magsafe_led_color "green"
 		else
 			log "Triggering charge to $subsetting before enabling sailing mode"
-			$battery_binary charge "$subsetting"
-			log "Charge pre battery-maintenance complete, continuing to battery maintenance loop"
+			enable_charging
+			change_magsafe_led_color "orange"
 		fi
 	else
 		log "Not triggering discharge as it is not requested"
